@@ -3,6 +3,8 @@
 
     <string name="app_name">WifiFingerPrint</string>
     <string name="title_activity_wifi">WifiActivity</string>
-    <string name="hello_world">Hello world!</string>
+    <string name="wifiwelcome">Wifi Finger Print and Stuff</string>
+    <string name="start_scan">Start Scan</string>
+    <string name="stop_scan">Stop Scan</string>
 
 </resources>
