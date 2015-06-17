@@ -29,15 +29,24 @@ public class WifiActivity extends Activity {
 		super.onCreate(savedInstanceState);		
 		setContentView(R.layout.activity_wifi);
 		final Intent WifiIntent = new Intent(this, WifiFingerPrintDaemon.class);
+		final Intent LearningIntent = new Intent(this, WifiFingerPrintLearning.class);
 		
 		
 		 final Button startBT = (Button) findViewById(R.id.startBT);
+		 final Button learningBT = (Button)findViewById(R.id.learning_bt);
 		 
 		  startBT.setOnClickListener(new View.OnClickListener() {
 		        public void onClick(View v) {
 		       	 startService(WifiIntent);
 		        }
 		    });		
+		  
+		  learningBT.setOnClickListener(new View.OnClickListener() {
+		        public void onClick(View v) {
+		        	startService(LearningIntent);
+		        	
+		        }
+		    });	
 		  
 		IntentFilter intentFilter = new IntentFilter(WifiFingerPrintDaemon.NOTIFICATION);
 		intentFilter.addCategory(Intent.CATEGORY_DEFAULT);
@@ -49,12 +58,13 @@ public class WifiActivity extends Activity {
 
 		  @Override
 		  public void onReceive(Context context, Intent intent) {
+			  System.out.println("TEST ===========> DICK");
 		   Test = intent.getStringExtra(WifiFingerPrintDaemon.APRESULT);
 		  
 		  }
 		 }
 	
   
-
+	
 	
 }

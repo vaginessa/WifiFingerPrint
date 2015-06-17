@@ -18,6 +18,9 @@
         <service
             android:name=".WifiFingerPrintDaemon"
             android:exported="false" />
+          <service
+            android:name=".WifiFingerPrintLearning"
+            android:exported="false" />
 
         <activity
             android:name=".WifiActivity"

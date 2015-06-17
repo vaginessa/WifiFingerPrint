@@ -9,8 +9,15 @@ import android.net.wifi.WifiManager;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import com.opencsv.CSVReader;
 
 import android.content.BroadcastReceiver;
 import android.content.IntentFilter;
@@ -27,12 +34,14 @@ import android.util.Log;
 
 public class WifiFingerPrintDaemon extends IntentService {	
 	static private WifiManager wifimgr;
-	private IntentFilter wifiFilter = new IntentFilter();
+	private LocationMap learnedLocations;
+	private LocationMap currentLocations;
 	private List<ScanResult> apList = null;	
 	public static final String NOTIFICATION = "org.es25.wififingerprint";
 	public static final String APRESULT = "apresult";
 	private static final String TAG = "WifiFingerPrintDaemon";
 	private static final String RSSILogFile ="RssiLogFile.csv";
+	private static final String RSSILearningMap ="RssiLearningMap.csv";
 	
 	
 	public WifiFingerPrintDaemon() {
@@ -42,7 +51,9 @@ public class WifiFingerPrintDaemon extends IntentService {
 
 
 	@Override
-	protected void onHandleIntent(Intent arg0) {				
+	protected void onHandleIntent(Intent arg0) {
+		learnedLocations = new LocationMap();
+		currentLocations = new LocationMap();
 		File file = new File(getFilesDir(), RSSILogFile);
 		Log.d(TAG,"LogFile Directory" + getFilesDir());
 		
@@ -55,8 +66,16 @@ public class WifiFingerPrintDaemon extends IntentService {
 			  
 			 Log.d(TAG,"========START WIFI-SCAN============");
 			 wifimgr.startScan();			 
-		     apList = wifimgr.getScanResults();		
-		
+		     apList = wifimgr.getScanResults();
+		     
+		     for(ScanResult res : apList){
+		    	 
+		    	 currentLocations.add(res.SSID, res.BSSID, res.level); 
+		     }
+		     
+		     
+		     
+		/*
 			 try {
 				 Log.d(TAG,"========START Writing============" + apList);
 				  outStream = openFileOutput(RSSILogFile, Context.MODE_PRIVATE);
@@ -67,6 +86,15 @@ public class WifiFingerPrintDaemon extends IntentService {
 				} catch (Exception e) {
 				  e.printStackTrace();
 				}
+			*/
+		     
+		     
+			 System.out.println("Learnd MAP RESULTS");
+			 System.out.println(readCsv().getLocation("Dirty-Worms").getLocationData());
+			 
+			 
+			 System.out.println("Current MAP RESULTS");
+			 System.out.println(currentLocations.getLocation("Dirty-Worms").getLocationData());
 			 
 			 /*
 		 //send update 
@@ -111,7 +139,32 @@ public void onReceive(Context arg0, Intent arg1) {
 
 }};
 	
+
 	
+public final LocationMap readCsv() {	  
+	LocationMap locationMap = new LocationMap();
+	  try {
+	    InputStream csvLearningMap = openFileInput(RSSILearningMap);
+	    InputStreamReader csvStreamReader = new InputStreamReader(csvLearningMap);
+	    CSVReader csvReader = new CSVReader(csvStreamReader);
+	    String[] line;
+
+
+
+	    while ((line = csvReader.readNext()) != null) {
+	     locationMap.add(line[0], line[1], Integer.parseInt(line[2]));	 
+	     
+	    }
+	  } catch (IOException e) {
+	    e.printStackTrace();
+	  }
+	  return locationMap;
+	}
+
+
+
+
+
 	
 }
 
