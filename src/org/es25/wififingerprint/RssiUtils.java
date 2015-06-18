@@ -13,12 +13,15 @@ public class RssiUtils {
 
 	}
 	
-	public int calcEucliDist (LocationMap learned, LocationMap scanned){
+	public static int calcEucliDist (LocationMap learned, LocationMap scanned){
+	
 		
-		
-		
+		System.out.println(learned.getIntersect(scanned));
+
 		
 		return 100;
 	}
+	
+	
 
 }

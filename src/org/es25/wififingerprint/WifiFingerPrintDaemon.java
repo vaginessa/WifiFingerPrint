@@ -90,11 +90,15 @@ public class WifiFingerPrintDaemon extends IntentService {
 		     
 		     
 			 System.out.println("Learnd MAP RESULTS");
-			 System.out.println(readCsv().getLocation("Dirty-Worms").getLocationData());
-			 
+			 System.out.println(readCsv().getKeys());
+			
 			 
 			 System.out.println("Current MAP RESULTS");
-			 System.out.println(currentLocations.getLocation("Dirty-Worms").getLocationData());
+			System.out.println(currentLocations.getKeys());
+			 
+			 
+			 System.out.println("Intersect SET");
+			 RssiUtils.calcEucliDist(readCsv(), currentLocations);
 			 
 			 /*
 		 //send update 

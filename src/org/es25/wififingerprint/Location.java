@@ -30,6 +30,15 @@ public class Location {
 		return this.data;
 	}
 	
+	public Integer getRssiValue(String bssid){
+		for(LocationData d : data){
+			if(bssid.equals(d.BSSID)){
+				return d.dBValue;
+			}
+		}
+		return null;
+	}
+	
 	
 	
 	
@@ -44,6 +53,7 @@ public class Location {
 		public String toString(){
 			return this.BSSID + " | " + this.dBValue;
 		}
+
 	}
 	
 }

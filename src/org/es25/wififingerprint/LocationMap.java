@@ -1,6 +1,10 @@
 package org.es25.wififingerprint;
 
 import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.TreeSet;
 
 public class LocationMap {
 
@@ -21,11 +25,23 @@ public class LocationMap {
 	    	 curLocation.addData(bssid, dbvalue);
 	}
 	
+	public Set<String> getIntersect(LocationMap other){
 	
+		Set<String> os =
+				new TreeSet<String>(other.myLocations.keySet());
+		
+		os.retainAll(myLocations.keySet());
+		
+		return os;
+	}
 	
 	
 	public Location getLocation(String ssid){
 		return this.myLocations.get(ssid);
+	}
+	
+	public Set<String> getKeys(){
+		return myLocations.keySet();
 	}
 	
 }
