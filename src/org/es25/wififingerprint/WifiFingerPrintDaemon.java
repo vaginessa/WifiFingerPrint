@@ -1,177 +1,94 @@
+
+
 package org.es25.wififingerprint;
 
 import android.app.IntentService;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.net.wifi.ScanResult;
-import android.net.wifi.WifiInfo;
-import android.net.wifi.WifiManager;
-
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import com.opencsv.CSVReader;
-
-import android.content.BroadcastReceiver;
 import android.content.IntentFilter;
-import android.app.Activity;
-import android.app.IntentService;
-import android.net.ConnectivityManager;
-import android.net.Uri;
-import android.os.Bundle;
-import android.os.Environment;
-import android.os.Message;
-import android.os.Messenger;
+import android.net.wifi.ScanResult;
+import android.net.wifi.WifiManager;
 import android.util.Log;
+import java.io.FileNotFoundException;
+import java.util.List;
+import java.util.Set;
+import org.es25.wififingerprint.struct1.LocationMap;
+import org.es25.wififingerprint.struct1.Station;
 
 
-public class WifiFingerPrintDaemon extends IntentService {	
+public class WifiFingerPrintDaemon extends IntentService {
 	static private WifiManager wifimgr;
-	private LocationMap learnedLocations;
-	private LocationMap currentLocations;
-	private List<ScanResult> apList = null;	
 	public static final String NOTIFICATION = "org.es25.wififingerprint";
 	public static final String APRESULT = "apresult";
 	private static final String TAG = "WifiFingerPrintDaemon";
-	private static final String RSSILogFile ="RssiLogFile.csv";
-	private static final String RSSILearningMap ="RssiLearningMap.csv";
-	
-	
+	private static final String EST_LOG_FILE = "RssiLogFile.csv";
+	private static final String LOC_MAP_FILE = "RssiLearningMap.csv";
+	private LocationMap learnedLocations;
+	private List<ScanResult> apList = null;
+
+	private BroadcastReceiver wifiReceiver = new BroadcastReceiver() {
+
+		@Override
+		public void onReceive(Context arg0, Intent arg1) {
+			// WifiManager wifiMan=(WifiManager).getSystemService(Context.WIFI_SERVICE);
+			// wifiMan.startScan();
+			// int newRssi = wifiMan.getConnectionInfo().getRssi();
+			// Toast.makeText(getActivity(), ""+newRssi, Toast.LENGTH_SHORT).show();
+
+			apList = wifimgr.getScanResults();
+			System.out.println(apList);
+
+		}
+	};
+
+
+	/**
+	 * Construct the shit.
+	 */
 	public WifiFingerPrintDaemon() {
 		super("org.es25.wififingerprint.WifiFingerPrintDaemon");
-				
 	}
 
 
 	@Override
 	protected void onHandleIntent(Intent arg0) {
-		learnedLocations = new LocationMap();
-		currentLocations = new LocationMap();
-		File file = new File(getFilesDir(), RSSILogFile);
-		Log.d(TAG,"LogFile Directory" + getFilesDir());
-		
-		FileOutputStream outStream;
+		try {
+			learnedLocations = RssiUtils.loadMap(openFileInput(LOC_MAP_FILE));
+		} catch (FileNotFoundException ex) {
+			System.out.println("ERROR !! - Perform some learning scans first!");
+		}
 
-		Log.d(TAG,"========START WIFI-ING============");
-		wifimgr = (WifiManager)getSystemService(Context.WIFI_SERVICE);
-		wifimgr.setWifiEnabled(true);		
+		Log.d(TAG, "========START WIFI-ING============");
+		wifimgr = (WifiManager) getSystemService(Context.WIFI_SERVICE);
+		wifimgr.setWifiEnabled(true);
 		registerReceiver(wifiReceiver, new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
-			  
-			 Log.d(TAG,"========START WIFI-SCAN============");
-			 wifimgr.startScan();			 
-		     apList = wifimgr.getScanResults();
-		     
-		     for(ScanResult res : apList){
-		    	 
-		    	 currentLocations.add(res.SSID, res.BSSID, res.level); 
-		     }
-		     
-		     
-		     
-		/*
-			 try {
-				 Log.d(TAG,"========START Writing============" + apList);
-				  outStream = openFileOutput(RSSILogFile, Context.MODE_PRIVATE);
-				  for(String a : buildRssiList(apList)){
-					  outStream.write(a.getBytes()); 
-				  }				  
-				  outStream.close();
-				} catch (Exception e) {
-				  e.printStackTrace();
-				}
-			*/
-		     
-		     
-			 System.out.println("Learnd MAP RESULTS");
-			 System.out.println(readCsv().getKeys());
-			
-			 
-			 System.out.println("Current MAP RESULTS");
-			System.out.println(currentLocations.getKeys());
-			 
-			 
-			 System.out.println("Intersect SET");
-			 RssiUtils.calcEucliDist(readCsv(), currentLocations);
-			 
-			 /*
-		 //send update 
-		   Intent intentUpdate = new Intent();
-		   intentUpdate.setAction(NOTIFICATION);
-		   intentUpdate.addCategory(Intent.CATEGORY_DEFAULT);
-		  // intentUpdate.putExtra(APRESULT, TestString);
-		   sendBroadcast(intentUpdate);
-		 */
+
+		////  START SCANNING AND FILTERING THE SHIT
+		//////////////////////////////////////////////////////////////////////
+		Log.d(TAG, "========START WIFI-SCAN============");
+		wifimgr.startScan();
+		Set<Station> stations = RssiUtils.filterScan(wifimgr.getScanResults());
+
+		System.out.println();
+		System.out.println("LEARNED LOCATION MAP\n====================================================================");
+		System.out.println(learnedLocations.getNames());
+		System.out.println();
+
+		System.out.println();
+		System.out.println("CURRENT SCAN RESULTS\n====================================================================");
+		System.out.println(stations);
+		System.out.println();
+
+		// TODO place some triangulation stuff here!!!
+		//System.out.println("Intersect SET");
+		//RssiUtils.calcEucliDist(readCsv(), currentLocations);
 	}
 
-	
 
 	@Override
-	public void onDestroy(){		
+	public void onDestroy() {
 		unregisterReceiver(wifiReceiver);
-		
+
 	}
-	
-	private List<String> buildRssiList(final List<ScanResult> scr){		
-		 List<String> rssiList = new ArrayList<String>();
-		 
-		 for(ScanResult r : scr){
-			 //!!! dont forget the calculateSignalLevel achtung bug in android 2.3.3!!!
-			 rssiList.add(String.format("%s,%s,%d\n",r.SSID, r.BSSID,r.level));
-		 }		 
-		 return rssiList;
-	}
-	
-	
-	private BroadcastReceiver wifiReceiver = new BroadcastReceiver(){
-		
-@Override
-public void onReceive(Context arg0, Intent arg1) {
-   // WifiManager wifiMan=(WifiManager).getSystemService(Context.WIFI_SERVICE);
-   // wifiMan.startScan();
-   // int newRssi = wifiMan.getConnectionInfo().getRssi();
-   // Toast.makeText(getActivity(), ""+newRssi, Toast.LENGTH_SHORT).show();
-	
-	apList = wifimgr.getScanResults();
-	System.out.println(apList);
-
-}};
-	
-
-	
-public final LocationMap readCsv() {	  
-	LocationMap locationMap = new LocationMap();
-	  try {
-	    InputStream csvLearningMap = openFileInput(RSSILearningMap);
-	    InputStreamReader csvStreamReader = new InputStreamReader(csvLearningMap);
-	    CSVReader csvReader = new CSVReader(csvStreamReader);
-	    String[] line;
-
-
-
-	    while ((line = csvReader.readNext()) != null) {
-	     locationMap.add(line[0], line[1], Integer.parseInt(line[2]));	 
-	     
-	    }
-	  } catch (IOException e) {
-	    e.printStackTrace();
-	  }
-	  return locationMap;
-	}
-
-
-
-
-
-	
 }
-
-
-
-
