@@ -1,21 +1,33 @@
+/*
+ * Copyright (C) 2015 Armin Leghissa, Christian Rauecker
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
 
 
 package org.es25.wififingerprint;
 
 import android.app.IntentService;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
-import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
 import android.util.Log;
-
 import java.io.FileNotFoundException;
-import java.util.List;
 import java.util.Set;
-
 import org.es25.wififingerprint.WifiActivity.ResponseReceiver;
+import org.es25.wififingerprint.struct1.Location;
 import org.es25.wififingerprint.struct1.LocationMap;
 import org.es25.wififingerprint.struct1.Station;
 
@@ -30,8 +42,7 @@ public class WifiFingerPrintDaemon extends IntentService {
 	private static final String EST_LOG_FILE = "RssiLogFile.csv";
 	private static final String LOC_MAP_FILE = "RssiLearningMap.csv";
 	private LocationMap learnedLocations;
-	
-	
+
 
 
 	/**
@@ -71,15 +82,20 @@ public class WifiFingerPrintDaemon extends IntentService {
 		System.out.println(stations);
 		System.out.println();
 
-		// TODO place some triangulation stuff here!!!
-		//System.out.println("Intersect SET");
-		//RssiUtils.calcEucliDist(readCsv(), currentLocations);
+		Location nearest = Util.triangulateLocation(learnedLocations, stations);
+
+		System.out.println();
+		System.out.println("TRIANGULATED LOCATION\n====================================================================");
+		System.out.println(nearest);
+		System.out.println();
+
 		Intent broadcastIntent = new Intent();
 		broadcastIntent.setAction(ResponseReceiver.ACTION_RESP);
 		broadcastIntent.addCategory(Intent.CATEGORY_DEFAULT);
-		broadcastIntent.putExtra(PARAM_OUTPUT, "STFU");
+		broadcastIntent.putExtra(PARAM_OUTPUT, nearest.getName());
 		sendBroadcast(broadcastIntent);
 	}
+
 
 
 }
