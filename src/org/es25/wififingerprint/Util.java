@@ -2,6 +2,7 @@
 
 package org.es25.wififingerprint;
 
+import android.content.Context;
 import android.net.wifi.ScanResult;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVWriter;
@@ -24,7 +25,7 @@ import org.es25.wififingerprint.struct1.Station;
  * @author Armin Leghissa
  */
 public class Util {
-	private static final String DRUGS_MSG = "Which fucking drugs did they take ???";
+	private static final String DRUGS_MSG = "Whitch fucking drugs did they take ???";
 
 
 	/**
@@ -68,7 +69,7 @@ public class Util {
 		for (ScanResult res : raw_scan) {
 			Station station = new Station(
 					res.BSSID, // the mac address
-Util.rssi2quality(res.level));
+					Util.rssi2quality(res.level));
 
 			scan.add(station);
 		}
@@ -97,14 +98,31 @@ Util.rssi2quality(res.level));
 	}
 
 
-	public static int eucDist() {
-		return 0;
+	/**
+	 * Calculates the euclidian distance between a bunch of stations from the DB and a station set from a runtime scan.
+	 *
+	 * @param db_aps A {@link Location} object from the {@link LocationMap}, the database.
+	 * @param scan_aps A set of {@link Station}s created from a runtime scan.
+	 * @return the euclidian distance between the intersecting access points.
+	 */
+	public static float eucDist(Location db_aps, Set<Station> scan_aps) {
+		double res = 0;
+
+		for (Station r : scan_aps) {
+			Integer s_rssi;
+
+			if ((s_rssi = db_aps.getRssiFor(r.mac)) != null)
+				res += Math.pow((s_rssi - r.rssi), 2);
+		}
+
+		return (float) Math.sqrt(res);
 	}
 
 
 	/**
 	 * Loads a {@link LocationMap} from a csv "database", specifyed by an {@link InputStream}.
 	 * All readers and streams will be closed by this function.
+	 * NOTE Given instream should be retrieved by {@link Context#openFileInput(String)}!
 	 *
 	 * @param file The csv file to load from.
 	 * @return the {@link LocationMap} represented by the database.
@@ -135,6 +153,8 @@ Util.rssi2quality(res.level));
 	/**
 	 * Stores a {@link LocationMap} to a csv database specifyed by a {@link FileOutputStream}.
 	 * All writers and streams will be closed by this function.
+	 * NOTE Given outstream should be retrieved by {@link Context#openFileOutput(String, int)}, using mode
+	 * {@link Context#MODE_PRIVATE}!
 	 *
 	 * @param map Map to store to database.
 	 * @param os Outpu stream to write to.
@@ -165,6 +185,38 @@ Util.rssi2quality(res.level));
 				System.out.println(DRUGS_MSG);
 			}
 		}
+	}
 
+
+	/**
+	 * Appends a locationing result log to a logfile represented by a {@link FileOutputStream}.
+	 * NOTE Given outstream should be retrieved by {@link Context#openFileOutput(String, int)}, using mode
+	 * {@link Context#MODE_APPEND}!
+	 * TODO The result set is only an example for now!
+	 *
+	 * @param result Some positioning results to log.
+	 * @param os a {@link FileOutputStream} for the log file.
+	 */
+	public static void appendToLogfile(String[] result, FileOutputStream os) {
+		CSVWriter csvwr = new CSVWriter(new OutputStreamWriter(os));
+		String[] line = new String[6];
+		line[0] = result[0];
+		line[1] = result[1];
+		line[2] = result[2];
+		/// and so forth... depending on result type/signature we don't know yet...
+		csvwr.writeNext(line);
+
+		try {
+			csvwr.flush();
+		} catch (IOException ex) {
+			System.out.println("ERROE !! - " + ex.getMessage());
+		} finally {
+			try {
+				csvwr.close();
+				os.close();
+			} catch (IOException ex) {
+				System.out.println(DRUGS_MSG);
+			}
+		}
 	}
 }
