@@ -19,15 +19,6 @@
         android:layout_marginTop="21dp"
         android:text="@string/start_scan" />
 
-    <Button
-        android:id="@+id/learning_bt"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignBaseline="@+id/startBT"
-        android:layout_alignBottom="@+id/startBT"
-        android:layout_centerHorizontal="true"
-        android:text="Learning Phase" />
-
     <TextView
         android:id="@+id/show_location_txt"
         android:layout_width="wrap_content"
@@ -36,5 +27,14 @@
         android:layout_below="@+id/startBT"
         android:layout_marginTop="22dp"
         android:text="@string/mylocation" />
+
+    <Button
+        android:id="@+id/learning_bt"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/startBT"
+        android:layout_alignBottom="@+id/startBT"
+        android:layout_toRightOf="@+id/textView1"
+        android:text="Learning Phase" />
 
 </RelativeLayout>

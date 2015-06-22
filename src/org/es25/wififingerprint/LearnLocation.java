@@ -21,15 +21,17 @@ public class LearnLocation extends Activity {
 
 		perfomLearnBT.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
+				
 				EditText locationInput = (EditText) findViewById(R.id.locationName_txt);
 				String msg = locationInput.getText().toString();
 				if(msg.isEmpty()){
 					msg = "New Location";
 				}
+				locationInput.getText().clear();
 				LearningIntent.putExtra(WifiFingerPrintLearning.PARAM_INPUT,
-						msg);
-
+						msg);			
 				startService(LearningIntent);
+				
 			}
 		});
 

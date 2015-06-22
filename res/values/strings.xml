@@ -4,7 +4,7 @@
     <string name="app_name">WifiFingerPrint</string>
     <string name="title_activity_wifi">WifiActivity</string>
     <string name="wifiwelcome">Wifi Finger Print and Stuff</string>
-    <string name="start_scan">Start Scan</string>
+    <string name="start_scan">Find My Position</string>
     <string name="stop_scan">Stop Scan</string>
     <string name="title_activity_learn_location">LearnLocation</string>
     <string name="learn_location">Location Name</string>

@@ -17,9 +17,9 @@ import android.widget.TextView;
 public class WifiActivity extends Activity {
 	
 
+	public Boolean runLoop = false;
+	public Intent threadIntent;
 	
-	private static final String TAG = "WifiActivity";
-
 	
 	
 
@@ -34,33 +34,50 @@ public class WifiActivity extends Activity {
         registerReceiver(receiver, filter);
 		
 		
-		final Intent WifiIntent = new Intent(this, WifiFingerPrintDaemon.class);
+        final Intent WifiIntent = new Intent(this, WifiFingerPrintDaemon.class);
 		final Intent LearningIntent = new Intent(this, LearnLocation.class);
+		
+		threadIntent = WifiIntent;
 		
 
 		
 		 final Button startBT = (Button) findViewById(R.id.startBT);
 		 final Button learningBT = (Button)findViewById(R.id.learning_bt);
 		 
+		 
+		 
+		 		 
 		  startBT.setOnClickListener(new View.OnClickListener() {
 		        public void onClick(View v) {
-		       	 startService(WifiIntent);
+		
+		       
+		        if(!runLoop){
+		       		 runLoop = true;
+		       		thread.start();
+		       		 System.out.println("START RUNNING FOREST");
+		       	 }else{
+		       		 runLoop = false;
+		       		 System.out.println("STOP RUNNING FOREST STOP !!!");
+		       	 }
+		      
+		        	//startService(WifiIntent);
 		        }
 		    });		
 		  
 		  learningBT.setOnClickListener(new View.OnClickListener() {
 		        public void onClick(View v) {
-		        	//startService(LearningIntent);
 		        	startActivity(LearningIntent);
 		        	
 		        }
 		    });	
-		  
+		 
+		 
 		
 
 	}
-	
-	
+
+
+
 	public class ResponseReceiver extends BroadcastReceiver {
 		   public static final String ACTION_RESP =    
 		      "org.ex25.wififingerprint.MESSAGE_PROCESSED";
@@ -72,6 +89,24 @@ public class WifiActivity extends Activity {
 		       showLocation.setText(locationTxt);
 		    }
 		}
+	
+	
+	Thread thread = new Thread(){
+	    @Override
+	    public void run() {
+	        try {
+	            while(runLoop) {
+	                Thread.sleep(30000);
+	                startService(threadIntent);
+	                System.out.println("RUN FOREST RUN !!!");
+	            }
+	        } catch (InterruptedException e) {
+	            e.printStackTrace();
+	        }
+	    }
+	};
+
+	
 	
   
 	
