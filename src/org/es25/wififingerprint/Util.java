@@ -97,25 +97,6 @@ public class Util {
 
 
 	/**
-	 * Calculates the euclidian distance between two given {@link LocationMap}s.
-	 *
-	 * @param learned Location map generated from a knowledge base.
-	 * @param scanned Location map generated from a scan.
-	 * @return The euclidian distance between the location intersections of the two maps.
-	 */
-	public static int calcEucliDist(LocationMap learned, LocationMap scanned) {
-		Set<String> common = learned.getIntersect(scanned);
-		System.out.println(common);
-
-		for (String name : common) {
-
-		}
-
-		return 100;
-	}
-
-
-	/**
 	 * Calculates the euclidian distance between a bunch of stations from the DB and a station set from a runtime scan.
 	 *
 	 * @param db_aps A {@link Location} object from the {@link LocationMap}, the database.
@@ -133,6 +114,33 @@ public class Util {
 		}
 
 		return (float) Math.sqrt(res);
+	}
+
+
+	/**
+	 * Triangulates the {@link Location} in the {@link LocationMap} DB for a given scanning set.
+	 * It uses the euclidian distance algorithem to determin the location with the lowest distance to the given set.
+	 *
+	 * @param learned the location map of learned rssi fingerprints.
+	 * @param scanned a set constructed by a runtime scan.
+	 * @return The triangulated location
+	 */
+	public static Location triangulateLocation(LocationMap learned, Set<Station> scanned) {
+		Float dist = null;
+		Location loc = null;
+
+		for (Location curr : learned) {
+			float curr_dist = eucDist(curr, scanned);
+
+			if (dist == null || dist < curr_dist) {
+				dist = curr_dist;
+				loc = curr;
+			}
+		}
+
+		System.out.println(
+				"==================================\nII NEAREST DISTANCE := " + dist + "\n==================================");
+		return loc;
 	}
 
 

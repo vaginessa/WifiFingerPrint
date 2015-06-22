@@ -20,6 +20,7 @@
 package org.es25.wififingerprint.struct1;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -29,7 +30,7 @@ import java.util.TreeSet;
  *
  * @author Armin Leghissa
  */
-public class LocationMap {
+public class LocationMap implements Iterable<Location> {
 
 	private final HashMap<String, Location> locations;
 
@@ -113,5 +114,16 @@ public class LocationMap {
 	 */
 	public Set<String> getNames() {
 		return locations.keySet();
+	}
+
+
+	/**
+	 * Gets an {@link Iterator} over all stations of this location map.
+	 *
+	 * @return an iterator.
+	 */
+	@Override
+	public Iterator<Location> iterator() {
+		return locations.values().iterator();
 	}
 }

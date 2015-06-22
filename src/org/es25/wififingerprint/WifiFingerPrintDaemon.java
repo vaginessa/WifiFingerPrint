@@ -30,6 +30,7 @@ import android.util.Log;
 import java.io.FileNotFoundException;
 import java.util.List;
 import java.util.Set;
+import org.es25.wififingerprint.struct1.Location;
 import org.es25.wififingerprint.struct1.LocationMap;
 import org.es25.wififingerprint.struct1.Station;
 
@@ -55,7 +56,6 @@ public class WifiFingerPrintDaemon extends IntentService {
 
 			apList = wifimgr.getScanResults();
 			System.out.println(apList);
-
 		}
 	};
 
@@ -97,6 +97,12 @@ public class WifiFingerPrintDaemon extends IntentService {
 		System.out.println(stations);
 		System.out.println();
 
+		Location nearest = Util.triangulateLocation(learnedLocations, stations);
+
+		System.out.println();
+		System.out.println("TRIANGULATED LOCATION\n====================================================================");
+		System.out.println(nearest);
+		System.out.println();
 		// TODO place some triangulation stuff here!!!
 		//System.out.println("Intersect SET");
 		//RssiUtils.calcEucliDist(readCsv(), currentLocations);
@@ -106,6 +112,5 @@ public class WifiFingerPrintDaemon extends IntentService {
 	@Override
 	public void onDestroy() {
 		unregisterReceiver(wifiReceiver);
-
 	}
 }

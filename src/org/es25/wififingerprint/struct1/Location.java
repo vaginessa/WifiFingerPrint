@@ -32,10 +32,9 @@ import java.util.Map;
  * @author Armin Leghissa
  */
 public class Location {
-
-	String name;
-	ArrayList<Station> stations;
-	Map<String, Integer> ap_map;
+	private final String name;
+	private final ArrayList<Station> stations;
+	private final Map<String, Integer> ap_map;
 
 
 	/**
@@ -117,5 +116,25 @@ public class Location {
 	 */
 	public Integer getRssiFor(String mac) {
 		return ap_map.get(mac);
+	}
+
+
+	/**
+	 * Returns a pretty printed version of this location.
+	 *
+	 * @return well formatted string.
+	 */
+	@Override
+	public String toString() {
+		StringBuilder sb = new StringBuilder(this.name);
+		sb.append('\n');
+
+		for (Station station : this.stations) {
+			sb.append('\t');
+			sb.append(sb.append(station.toString()));
+			sb.append('\n');
+		}
+
+		return sb.toString();
 	}
 }
