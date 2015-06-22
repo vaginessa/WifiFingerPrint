@@ -19,8 +19,6 @@
 
 package org.es25.wififingerprint.struct1;
 
-import org.es25.wififingerprint.Util;
-
 
 /**
  * A Station, consisting of a mac adress (bssid) and a dB/rssi value.
@@ -33,7 +31,7 @@ public class Station implements Comparable<Station> {
 
 	public Station(String bssid, int dbvalue) {
 		this.mac = bssid;
-		this.rssi = Util.rssi2quality(dbvalue);
+		this.rssi = dbvalue;
 	}
 
 
