@@ -18,7 +18,8 @@ public class WifiFingerPrintLearning extends IntentService {
 	private static WifiManager wifimgr;
 	private static final String LOC_MAP_FILE = "RssiLearningMap.csv";
 	private static final String TAG = "WifiFingerPrintLearning";
-	private static int count = 0;
+	public static final String PARAM_INPUT = "imsg";
+    public static final String PARAM_OUTPUT = "omsg";
 
 	private LocationMap locationMap = null;
 
@@ -33,6 +34,7 @@ public class WifiFingerPrintLearning extends IntentService {
 
 	@Override
 	protected void onHandleIntent(Intent intent) {
+		String locationName = intent.getStringExtra(PARAM_INPUT);
 		try {
 			locationMap = Util.loadMap(openFileInput(LOC_MAP_FILE));
 		} catch (FileNotFoundException ex) {
@@ -57,19 +59,15 @@ public class WifiFingerPrintLearning extends IntentService {
 		wifimgr.startScan();
 		Set<Station> stations = Util.filterScan(wifimgr.getScanResults());
 
-		// simulated location name: (which we want from user input for a bunch of scans)
-		String name = String.format("Location_#%d", count);
-		count++;
-		// end name simulation
-
+		
 		System.out.println();
 		System.out.println(
-				"II SCANNED STATIONS: (for " + name + "):\n====================================================================");
+				"II SCANNED STATIONS: (for " + locationName  + "):\n====================================================================");
 		System.out.println(stations);
 		System.out.println();
 
 		// writing new scan and location to the location map.
-		locationMap.add(name, stations);
+		locationMap.add(locationName, stations);
 
 		Log.d(TAG, "========START Writing============");
 		try {

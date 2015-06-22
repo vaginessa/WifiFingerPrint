@@ -3,9 +3,10 @@
     package="org.es25.wififingerprint"
     android:versionCode="1"
     android:versionName="1.0" >
-<uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
-<uses-permission android:name="android.permission.CHANGE_WIFI_STATE"/>
-    
+
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+
     <uses-sdk
         android:minSdkVersion="10"
         android:targetSdkVersion="10" />
@@ -18,17 +19,22 @@
         <service
             android:name=".WifiFingerPrintDaemon"
             android:exported="false" />
-          <service
+        <service
             android:name=".WifiFingerPrintLearning"
             android:exported="false" />
 
         <activity
             android:name=".WifiActivity"
             android:label="@string/title_activity_wifi" >
-                    <intent-filter>
-            <action android:name="android.intent.action.MAIN" />
-            <category android:name="android.intent.category.LAUNCHER" />
-        </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".LearnLocation"
+            android:label="@string/title_activity_learn_location" >
         </activity>
     </application>
 

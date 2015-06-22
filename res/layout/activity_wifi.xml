@@ -28,4 +28,13 @@
         android:layout_centerHorizontal="true"
         android:text="Learning Phase" />
 
+    <TextView
+        android:id="@+id/TextView01"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignRight="@+id/learning_bt"
+        android:layout_below="@+id/startBT"
+        android:layout_marginTop="22dp"
+        android:text="@string/mylocation" />
+
 </RelativeLayout>
