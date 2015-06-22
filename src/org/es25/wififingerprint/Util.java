@@ -94,12 +94,19 @@ public class Util {
 		for (ScanResult res : raw_scan) {
 			Station station = new Station(
 					res.BSSID, // the mac address
-					Util.rssi2quality(res.level));
+					rssi2quality(res.level));
 
 			scan.add(station);
 		}
 
+		System.out.println("DDDD Util:\tUNFILTERED STATIONS:");
+		System.out.println("DDDD Util:\t" + scan);
+
 		Util.medianFilter(scan);
+
+		System.out.println("DDDD Util:\tMEDIAN-FILTERED STATIONS:");
+		System.out.println("DDDD Util:\t" + scan);
+
 		return scan;
 	}
 
