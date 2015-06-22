@@ -10,37 +10,28 @@ import android.content.IntentFilter;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
 import android.util.Log;
+
 import java.io.FileNotFoundException;
 import java.util.List;
 import java.util.Set;
+
+import org.es25.wififingerprint.WifiActivity.ResponseReceiver;
 import org.es25.wififingerprint.struct1.LocationMap;
 import org.es25.wififingerprint.struct1.Station;
 
 
 public class WifiFingerPrintDaemon extends IntentService {
 	static private WifiManager wifimgr;
+	public static final String PARAM_INPUT = "imsg";
+    public static final String PARAM_OUTPUT = "omsg";
 	public static final String NOTIFICATION = "org.es25.wififingerprint";
 	public static final String APRESULT = "apresult";
 	private static final String TAG = "WifiFingerPrintDaemon";
 	private static final String EST_LOG_FILE = "RssiLogFile.csv";
 	private static final String LOC_MAP_FILE = "RssiLearningMap.csv";
 	private LocationMap learnedLocations;
-	private List<ScanResult> apList = null;
-
-	private BroadcastReceiver wifiReceiver = new BroadcastReceiver() {
-
-		@Override
-		public void onReceive(Context arg0, Intent arg1) {
-			// WifiManager wifiMan=(WifiManager).getSystemService(Context.WIFI_SERVICE);
-			// wifiMan.startScan();
-			// int newRssi = wifiMan.getConnectionInfo().getRssi();
-			// Toast.makeText(getActivity(), ""+newRssi, Toast.LENGTH_SHORT).show();
-
-			apList = wifimgr.getScanResults();
-			System.out.println(apList);
-
-		}
-	};
+	
+	
 
 
 	/**
@@ -62,7 +53,7 @@ public class WifiFingerPrintDaemon extends IntentService {
 		Log.d(TAG, "========START WIFI-ING============");
 		wifimgr = (WifiManager) getSystemService(Context.WIFI_SERVICE);
 		wifimgr.setWifiEnabled(true);
-		registerReceiver(wifiReceiver, new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
+		
 
 		////  START SCANNING AND FILTERING THE SHIT
 		//////////////////////////////////////////////////////////////////////
@@ -83,12 +74,12 @@ public class WifiFingerPrintDaemon extends IntentService {
 		// TODO place some triangulation stuff here!!!
 		//System.out.println("Intersect SET");
 		//RssiUtils.calcEucliDist(readCsv(), currentLocations);
+		Intent broadcastIntent = new Intent();
+		broadcastIntent.setAction(ResponseReceiver.ACTION_RESP);
+		broadcastIntent.addCategory(Intent.CATEGORY_DEFAULT);
+		broadcastIntent.putExtra(PARAM_OUTPUT, "STFU");
+		sendBroadcast(broadcastIntent);
 	}
 
 
-	@Override
-	public void onDestroy() {
-		unregisterReceiver(wifiReceiver);
-
-	}
 }
