@@ -35,14 +35,11 @@ import org.es25.wififingerprint.struct1.Station;
 public class WifiFingerPrintDaemon extends IntentService {
 	static private WifiManager wifimgr;
 	public static final String PARAM_INPUT = "imsg";
-    public static final String PARAM_OUTPUT = "omsg";
+	public static final String PARAM_OUTPUT = "omsg";
 	public static final String NOTIFICATION = "org.es25.wififingerprint";
 	public static final String APRESULT = "apresult";
 	private static final String TAG = "WifiFingerPrintDaemon";
-	private static final String EST_LOG_FILE = "RssiLogFile.csv";
-	private static final String LOC_MAP_FILE = "RssiLearningMap.csv";
 	private LocationMap learnedLocations;
-
 
 
 	/**
@@ -56,7 +53,7 @@ public class WifiFingerPrintDaemon extends IntentService {
 	@Override
 	protected void onHandleIntent(Intent arg0) {
 		try {
-			learnedLocations = Util.loadMap(openFileInput(LOC_MAP_FILE));
+			learnedLocations = Util.loadMap(openFileInput(Util.MAP_FILE));
 		} catch (FileNotFoundException ex) {
 			System.out.println("ERROR !! - Perform some learning scans first!");
 		}
@@ -64,7 +61,6 @@ public class WifiFingerPrintDaemon extends IntentService {
 		Log.d(TAG, "========START WIFI-ING============");
 		wifimgr = (WifiManager) getSystemService(Context.WIFI_SERVICE);
 		wifimgr.setWifiEnabled(true);
-		
 
 		////  START SCANNING AND FILTERING THE SHIT
 		//////////////////////////////////////////////////////////////////////
@@ -95,7 +91,5 @@ public class WifiFingerPrintDaemon extends IntentService {
 		broadcastIntent.putExtra(PARAM_OUTPUT, nearest.getName());
 		sendBroadcast(broadcastIntent);
 	}
-
-
 
 }

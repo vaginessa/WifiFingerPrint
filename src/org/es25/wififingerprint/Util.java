@@ -44,6 +44,12 @@ import org.es25.wififingerprint.struct1.Station;
 public class Util {
 	private static final String DRUGS_MSG = "Whitch fucking drugs did they take ???";
 
+	/** File name for the csv log file. */
+	public static final String LOG_FILE = "Leghissa_1357869_Rauecker_0757491.log";
+
+	/** File name for the {@link LocationMap} database. */
+	public static final String MAP_FILE = "RssiLearningMap.csv";
+
 
 	/**
 	 * Calculates a percentage value for the signal quality from a given rssi value.

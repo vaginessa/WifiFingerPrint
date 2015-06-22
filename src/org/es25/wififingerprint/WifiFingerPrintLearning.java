@@ -33,10 +33,9 @@ import org.es25.wififingerprint.struct1.Station;
 public class WifiFingerPrintLearning extends IntentService {
 
 	private static WifiManager wifimgr;
-	private static final String LOC_MAP_FILE = "RssiLearningMap.csv";
 	private static final String TAG = "WifiFingerPrintLearning";
 	public static final String PARAM_INPUT = "imsg";
-    public static final String PARAM_OUTPUT = "omsg";
+	public static final String PARAM_OUTPUT = "omsg";
 
 	private LocationMap locationMap = null;
 
@@ -53,7 +52,7 @@ public class WifiFingerPrintLearning extends IntentService {
 	protected void onHandleIntent(Intent intent) {
 		String locationName = intent.getStringExtra(PARAM_INPUT);
 		try {
-			locationMap = Util.loadMap(openFileInput(LOC_MAP_FILE));
+			locationMap = Util.loadMap(openFileInput(Util.MAP_FILE));
 		} catch (FileNotFoundException ex) {
 			locationMap = new LocationMap();
 		}
@@ -76,10 +75,9 @@ public class WifiFingerPrintLearning extends IntentService {
 		wifimgr.startScan();
 		Set<Station> stations = Util.filterScan(wifimgr.getScanResults());
 
-		
 		System.out.println();
 		System.out.println(
-				"II SCANNED STATIONS: (for " + locationName  + "):\n====================================================================");
+				"II SCANNED STATIONS: (for " + locationName + "):\n====================================================================");
 		System.out.println(stations);
 		System.out.println();
 
@@ -90,7 +88,7 @@ public class WifiFingerPrintLearning extends IntentService {
 		try {
 			Util.storeMap(
 					locationMap,
-					openFileOutput(LOC_MAP_FILE, Context.MODE_PRIVATE));
+					openFileOutput(Util.MAP_FILE, Context.MODE_PRIVATE));
 		} catch (FileNotFoundException ex) {
 			System.out.println("ERROR on LocMap writing !! - " + ex.getMessage());
 		}
