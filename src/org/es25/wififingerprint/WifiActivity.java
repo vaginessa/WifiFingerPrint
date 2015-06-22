@@ -16,11 +16,10 @@ import android.widget.TextView;
 
 public class WifiActivity extends Activity {
 	
-	private MyBroadcastAPList APListUpdateReceiver;
-	String Test;
-	
-	private static final String TAG = "WifiActivity";
 
+	public Boolean runLoop = false;
+	public Intent threadIntent;
+	
 	
 	
 
@@ -28,43 +27,86 @@ public class WifiActivity extends Activity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);		
 		setContentView(R.layout.activity_wifi);
-		final Intent WifiIntent = new Intent(this, WifiFingerPrintDaemon.class);
+		
+		IntentFilter filter = new IntentFilter(ResponseReceiver.ACTION_RESP);
+        filter.addCategory(Intent.CATEGORY_DEFAULT);
+        ResponseReceiver receiver = new ResponseReceiver();
+        registerReceiver(receiver, filter);
+		
+		
+        final Intent WifiIntent = new Intent(this, WifiFingerPrintDaemon.class);
 		final Intent LearningIntent = new Intent(this, LearnLocation.class);
+		
+		threadIntent = WifiIntent;
 		
 
 		
 		 final Button startBT = (Button) findViewById(R.id.startBT);
 		 final Button learningBT = (Button)findViewById(R.id.learning_bt);
 		 
+		 
+		 
+		 		 
 		  startBT.setOnClickListener(new View.OnClickListener() {
 		        public void onClick(View v) {
-		       	 startService(WifiIntent);
+		
+		       
+		        if(!runLoop){
+		       		 runLoop = true;
+		       		thread.start();
+		       		 System.out.println("START RUNNING FOREST");
+		       	 }else{
+		       		 runLoop = false;
+		       		 System.out.println("STOP RUNNING FOREST STOP !!!");
+		       	 }
+		      
+		        	//startService(WifiIntent);
 		        }
 		    });		
 		  
 		  learningBT.setOnClickListener(new View.OnClickListener() {
 		        public void onClick(View v) {
-		        	//startService(LearningIntent);
 		        	startActivity(LearningIntent);
 		        	
 		        }
 		    });	
-		  
-		IntentFilter intentFilter = new IntentFilter(WifiFingerPrintDaemon.NOTIFICATION);
-		intentFilter.addCategory(Intent.CATEGORY_DEFAULT);
-	    registerReceiver(APListUpdateReceiver, intentFilter);
-	}
-	
-	
-	public class MyBroadcastAPList extends BroadcastReceiver {
+		 
+		 
+		
 
-		  @Override
-		  public void onReceive(Context context, Intent intent) {
-			  System.out.println("TEST ===========> DICK");
-		   Test = intent.getStringExtra(WifiFingerPrintDaemon.APRESULT);
-		  
-		  }
-		 }
+	}
+
+
+
+	public class ResponseReceiver extends BroadcastReceiver {
+		   public static final String ACTION_RESP =    
+		      "org.ex25.wififingerprint.MESSAGE_PROCESSED";
+		    
+		   @Override
+		   public void onReceive(Context context, Intent intent) {
+		       TextView showLocation = (TextView) findViewById(R.id.show_location_txt);
+		       String locationTxt = intent.getStringExtra(WifiFingerPrintDaemon.PARAM_OUTPUT);
+		       showLocation.setText(locationTxt);
+		    }
+		}
+	
+	
+	Thread thread = new Thread(){
+	    @Override
+	    public void run() {
+	        try {
+	            while(runLoop) {
+	                Thread.sleep(30000);
+	                startService(threadIntent);
+	                System.out.println("RUN FOREST RUN !!!");
+	            }
+	        } catch (InterruptedException e) {
+	            e.printStackTrace();
+	        }
+	    }
+	};
+
+	
 	
   
 	
