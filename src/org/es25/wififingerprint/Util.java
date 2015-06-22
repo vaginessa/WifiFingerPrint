@@ -69,7 +69,9 @@ public class Util {
 	 * @param stations Stations set to perform the filter on.
 	 */
 	public static void medianFilter(TreeSet<Station> stations) {
-		for (int i = 0; i < stations.size(); i++)
+		int median = stations.size() / 2;
+
+		for (int i = 0; i < median; i++)
 			stations.pollFirst();
 	}
 
@@ -99,18 +101,18 @@ public class Util {
 	/**
 	 * Calculates the euclidian distance between a bunch of stations from the DB and a station set from a runtime scan.
 	 *
-	 * @param db_aps A {@link Location} object from the {@link LocationMap}, the database.
-	 * @param scan_aps A set of {@link Station}s created from a runtime scan.
+	 * @param loc A {@link Location} object from the {@link LocationMap}, the database.
+	 * @param scan A set of {@link Station}s created from a runtime scan.
 	 * @return the euclidian distance between the intersecting access points.
 	 */
-	public static float eucDist(Location db_aps, Set<Station> scan_aps) {
+	public static float eucDist(Location loc, Set<Station> scan) {
 		double res = 0;
 
-		for (Station r : scan_aps) {
-			Integer s_rssi;
+		for (Station r : scan) {
+			Integer loc_rssi;
 
-			if ((s_rssi = db_aps.getRssiFor(r.mac)) != null)
-				res += Math.pow((s_rssi - r.rssi), 2);
+			if ((loc_rssi = loc.getRssiFor(r.mac)) != null)
+				res += Math.pow((loc_rssi - r.rssi), 2);
 		}
 
 		return (float) Math.sqrt(res);
