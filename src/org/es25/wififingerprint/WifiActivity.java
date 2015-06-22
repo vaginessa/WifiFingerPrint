@@ -29,8 +29,9 @@ public class WifiActivity extends Activity {
 		super.onCreate(savedInstanceState);		
 		setContentView(R.layout.activity_wifi);
 		final Intent WifiIntent = new Intent(this, WifiFingerPrintDaemon.class);
-		final Intent LearningIntent = new Intent(this, WifiFingerPrintLearning.class);
+		final Intent LearningIntent = new Intent(this, LearnLocation.class);
 		
+
 		
 		 final Button startBT = (Button) findViewById(R.id.startBT);
 		 final Button learningBT = (Button)findViewById(R.id.learning_bt);
@@ -43,7 +44,8 @@ public class WifiActivity extends Activity {
 		  
 		  learningBT.setOnClickListener(new View.OnClickListener() {
 		        public void onClick(View v) {
-		        	startService(LearningIntent);
+		        	//startService(LearningIntent);
+		        	startActivity(LearningIntent);
 		        	
 		        }
 		    });	
