@@ -34,7 +34,7 @@ public class WifiFingerPrintLearning extends IntentService {
 	@Override
 	protected void onHandleIntent(Intent intent) {
 		try {
-			locationMap = RssiUtils.loadMap(openFileInput(LOC_MAP_FILE));
+			locationMap = Util.loadMap(openFileInput(LOC_MAP_FILE));
 		} catch (FileNotFoundException ex) {
 			locationMap = new LocationMap();
 		}
@@ -55,7 +55,7 @@ public class WifiFingerPrintLearning extends IntentService {
 		/////////////////////////////////////////////////////////////////////
 		Log.d(TAG, "========START WIFI-SCAN============");
 		wifimgr.startScan();
-		Set<Station> stations = RssiUtils.filterScan(wifimgr.getScanResults());
+		Set<Station> stations = Util.filterScan(wifimgr.getScanResults());
 
 		// simulated location name: (which we want from user input for a bunch of scans)
 		String name = String.format("Location_#%d", count);
@@ -73,7 +73,7 @@ public class WifiFingerPrintLearning extends IntentService {
 
 		Log.d(TAG, "========START Writing============");
 		try {
-			RssiUtils.storeMap(
+			Util.storeMap(
 					locationMap,
 					openFileOutput(LOC_MAP_FILE, Context.MODE_PRIVATE));
 		} catch (FileNotFoundException ex) {

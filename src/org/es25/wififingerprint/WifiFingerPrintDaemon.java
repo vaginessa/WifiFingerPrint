@@ -54,7 +54,7 @@ public class WifiFingerPrintDaemon extends IntentService {
 	@Override
 	protected void onHandleIntent(Intent arg0) {
 		try {
-			learnedLocations = RssiUtils.loadMap(openFileInput(LOC_MAP_FILE));
+			learnedLocations = Util.loadMap(openFileInput(LOC_MAP_FILE));
 		} catch (FileNotFoundException ex) {
 			System.out.println("ERROR !! - Perform some learning scans first!");
 		}
@@ -68,7 +68,7 @@ public class WifiFingerPrintDaemon extends IntentService {
 		//////////////////////////////////////////////////////////////////////
 		Log.d(TAG, "========START WIFI-SCAN============");
 		wifimgr.startScan();
-		Set<Station> stations = RssiUtils.filterScan(wifimgr.getScanResults());
+		Set<Station> stations = Util.filterScan(wifimgr.getScanResults());
 
 		System.out.println();
 		System.out.println("LEARNED LOCATION MAP\n====================================================================");

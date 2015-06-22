@@ -2,7 +2,7 @@
 
 package org.es25.wififingerprint.struct1;
 
-import org.es25.wififingerprint.RssiUtils;
+import org.es25.wififingerprint.Util;
 
 
 /**
@@ -16,7 +16,7 @@ public class Station implements Comparable<Station> {
 
 	public Station(String bssid, int dbvalue) {
 		this.mac = bssid;
-		this.rssi = RssiUtils.rssi2quality(dbvalue);
+		this.rssi = Util.rssi2quality(dbvalue);
 	}
 
 

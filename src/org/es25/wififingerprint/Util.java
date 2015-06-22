@@ -23,7 +23,7 @@ import org.es25.wififingerprint.struct1.Station;
  *
  * @author Armin Leghissa
  */
-public class RssiUtils {
+public class Util {
 	private static final String DRUGS_MSG = "Which fucking drugs did they take ???";
 
 
@@ -68,12 +68,12 @@ public class RssiUtils {
 		for (ScanResult res : raw_scan) {
 			Station station = new Station(
 					res.BSSID, // the mac address
-					RssiUtils.rssi2quality(res.level));
+Util.rssi2quality(res.level));
 
 			scan.add(station);
 		}
 
-		RssiUtils.medianFilter(scan);
+		Util.medianFilter(scan);
 		return scan;
 	}
 
