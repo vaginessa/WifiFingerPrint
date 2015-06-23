@@ -68,28 +68,36 @@ public class WifiFingerPrintDaemon extends IntentService {
 		wifimgr.startScan();
 		Set<Station> stations = Util.filterScan(wifimgr.getScanResults());
 
-		System.out.println();
+		System.out.println(" ");
 		System.out.println("LEARNED LOCATION MAP\n====================================================================");
 		System.out.println(learnedLocations.getNames());
 		System.out.println();
 
-		System.out.println();
+		System.out.println(" ");
 		System.out.println("CURRENT SCAN RESULTS\n====================================================================");
 		System.out.println(stations);
-		System.out.println();
+		System.out.println("");
 
 		Location nearest = Util.triangulateLocation(learnedLocations, stations);
 
-		System.out.println();
+		System.out.println(" ");
 		System.out.println("TRIANGULATED LOCATION\n====================================================================");
 		System.out.println(nearest);
-		System.out.println();
+		System.out.println(" ");
 
 		Intent broadcastIntent = new Intent();
 		broadcastIntent.setAction(ResponseReceiver.ACTION_RESP);
 		broadcastIntent.addCategory(Intent.CATEGORY_DEFAULT);
 		broadcastIntent.putExtra(PARAM_OUTPUT, nearest.getName());
 		sendBroadcast(broadcastIntent);
-	}
 
+		Log.d(TAG, "========Writing logfile============");
+		try {
+			Util.appendToLogfile(
+					nearest,
+					openFileOutput(Util.LOG_FILE, MODE_APPEND));
+		} catch (FileNotFoundException ex) {
+			System.out.println("ERROE !! - " + ex.getMessage());
+		}
+	}
 }

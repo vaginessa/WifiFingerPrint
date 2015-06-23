@@ -99,14 +99,7 @@ public class Util {
 			scan.add(station);
 		}
 
-		System.out.println("DDDD Util:\tUNFILTERED STATIONS:");
-		System.out.println("DDDD Util:\t" + scan);
-
 		Util.medianFilter(scan);
-
-		System.out.println("DDDD Util:\tMEDIAN-FILTERED STATIONS:");
-		System.out.println("DDDD Util:\t" + scan);
-
 		return scan;
 	}
 
@@ -138,7 +131,7 @@ public class Util {
 	 *
 	 * @param learned the location map of learned rssi fingerprints.
 	 * @param scanned a set constructed by a runtime scan.
-	 * @return The triangulated location
+	 * @return The triangulated location with the common stations with db locations.
 	 */
 	public static Location triangulateLocation(LocationMap learned, Set<Station> scanned) {
 		Float dist = null;
@@ -153,9 +146,14 @@ public class Util {
 			}
 		}
 
-		System.out.println(
-				"==================================\nII NEAREST DISTANCE := " + dist + "\n==================================");
-		return loc;
+		TreeSet<Station> rstations = new TreeSet<Station>((TreeSet<Station>) scanned);
+		rstations.retainAll(loc.getStations());
+		Location resloc = new Location(loc.getName());
+
+		for (Station stat : rstations)
+			resloc.addStation(stat);
+
+		return resloc;
 	}
 
 
@@ -232,17 +230,23 @@ public class Util {
 	 * Appends a locationing result log to a logfile represented by a {@link FileOutputStream}.
 	 * NOTE Given outstream should be retrieved by {@link Context#openFileOutput(String, int)}, using mode
 	 * {@link Context#MODE_APPEND}!
-	 * TODO The result set is only an example for now!
 	 *
-	 * @param result Some positioning results to log.
+	 * @param loc a result location to write to log.
 	 * @param os a {@link FileOutputStream} for the log file.
 	 */
-	public static void appendToLogfile(String[] result, FileOutputStream os) {
+	public static void appendToLogfile(Location loc, FileOutputStream os) {
 		CSVWriter csvwr = new CSVWriter(new OutputStreamWriter(os));
-		String[] line = new String[6];
-		line[0] = result[0];
-		line[1] = result[1];
-		line[2] = result[2];
+		int linelen = loc.getStations().size() * 2 + 1;
+		String[] line = new String[linelen];
+
+		line[0] = loc.getName();
+		int i = 1;
+
+		for (Station stat : loc.getStations()) {
+			line[i] = stat.mac;
+			line[i + 1] = String.valueOf(stat.rssi);
+			i += 2;
+		}
 		/// and so forth... depending on result type/signature we don't know yet...
 		csvwr.writeNext(line);
 
