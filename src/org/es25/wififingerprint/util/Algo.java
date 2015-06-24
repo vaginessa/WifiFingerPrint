@@ -17,44 +17,25 @@
  */
 
 
-package org.es25.wififingerprint;
+package org.es25.wififingerprint.util;
 
-import android.content.Context;
 import android.net.wifi.ScanResult;
-import com.opencsv.CSVReader;
-import com.opencsv.CSVWriter;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
-import org.es25.wififingerprint.struct1.Location;
-import org.es25.wififingerprint.struct1.LocationMap;
-import org.es25.wififingerprint.struct1.Station;
+import org.es25.wififingerprint.struct.Location;
+import org.es25.wififingerprint.struct.LocationMap;
+import org.es25.wififingerprint.struct.Station;
 
 
 /**
- * Common utility functions for this program.
- * TODO Alle write- und load-Funktionen an neue Station-struktur anpassen!
- * TODO Aufsplitten in IO und Algo Utility-Klassen.
+ * Utility class for all the algorithmic stuff.
  *
  * @author Armin Leghissa
  */
-public class Util {
-	private static final String DRUGS_MSG = "Whitch fucking drugs did they take ???";
-	private static final int MIN_TRIANG_STATIONS = 3;
-
-	/** File name for the csv log file. */
-	public static final String LOG_FILE = "LocEstimation.log";
-
-	/** File name for the csv {@link LocationMap} database. */
-	public static final String MAP_FILE = "RssiLearningMap.csv";
-
-	/** Default location name if no location could be triangulated. */
-	public static final String NO_LOCATION = "-NONE-";
+public class Algo {
+	/** Constant declaring the min. # of APs needed for triangulation. */
+	public static final int MIN_TRIANG_STATIONS = 3;
 
 
 	/**
@@ -107,7 +88,7 @@ public class Util {
 		}
 
 		if (useMedian)
-			Util.medianFilter(scan);
+			medianFilter(scan);
 
 		return scan;
 	}
@@ -175,7 +156,7 @@ public class Util {
 	 * @param scanned a set constructed by a runtime scan.
 	 * @return The triangulated result location holding the common stations or null.
 	 */
-	public static Location triangulateLocation(LocationMap learned, Set<Station> scanned) {
+	public static Location triangulate(LocationMap learned, Set<Station> scanned) {
 		float min_dist = Float.MAX_VALUE;
 		Location loc = null;
 
@@ -200,119 +181,5 @@ public class Util {
 			resloc.addStation(stat);
 
 		return resloc;
-	}
-
-
-	/**
-	 * Loads a {@link LocationMap} from a csv "database", specifyed by an {@link InputStream}.
-	 * All readers and streams will be closed by this function.
-	 * NOTE Given instream should be retrieved by {@link Context#openFileInput(String)}!
-	 *
-	 * @param file The csv file to load from.
-	 * @return the {@link LocationMap} represented by the database.
-	 */
-	public static LocationMap loadMap(InputStream in) {
-		LocationMap map = new LocationMap();
-		CSVReader csvrd = new CSVReader(new InputStreamReader(in));
-		String[] line;
-
-		try {
-			while ((line = csvrd.readNext()) != null)
-				map.add(line[0], line[1], Integer.parseInt(line[2]));
-		} catch (IOException ex) {
-			System.out.println("ERROR !! - " + ex.getMessage());
-		} finally {
-			try {
-				csvrd.close();
-				in.close();
-			} catch (IOException ex) {
-				System.out.println(DRUGS_MSG);
-			}
-		}
-
-		return map;
-	}
-
-
-	/**
-	 * Stores a {@link LocationMap} to a csv database specifyed by a {@link FileOutputStream}.
-	 * All writers and streams will be closed by this function.
-	 * NOTE Given outstream should be retrieved by {@link Context#openFileOutput(String, int)}, using mode
-	 * {@link Context#MODE_PRIVATE}!
-	 *
-	 * @param map Map to store to database.
-	 * @param os Outpu stream to write to.
-	 */
-	public static void storeMap(LocationMap map, FileOutputStream os) {
-		CSVWriter csvwr = new CSVWriter(new OutputStreamWriter(os));
-
-		for (Location loc : map) {
-			for (Station stat : loc) {
-				for (int rssi : stat) {
-					String[] line = new String[3];
-					line[0] = loc.getName();
-					line[1] = stat.mac();
-					line[2] = String.valueOf(rssi);
-					csvwr.writeNext(line);
-				}
-			}
-		}
-
-		try {
-			csvwr.flush();
-		} catch (IOException ex) {
-			System.out.println("ERROR !! - " + ex.getMessage());
-		} finally {
-			try {
-				csvwr.close();
-				os.close();
-			} catch (IOException ex) {
-				System.out.println(DRUGS_MSG);
-			}
-		}
-	}
-
-
-	/**
-	 * Appends a locationing result log to a logfile represented by a {@link FileOutputStream}.
-	 * NOTE Given outstream should be retrieved by {@link Context#openFileOutput(String, int)}, using mode
-	 * {@link Context#MODE_APPEND}!
-	 *
-	 * @param loc a result location to write to log.
-	 * @param os a {@link FileOutputStream} for the log file.
-	 */
-	public static void appendToLogfile(Location loc, FileOutputStream os) {
-		CSVWriter csvwr = new CSVWriter(new OutputStreamWriter(os));
-		String[] line;
-
-		if (loc != null) {
-			line = new String[loc.getStations().size() * 2 + 1];
-			line[0] = loc.getName();
-			int i = 1;
-
-			for (Station stat : loc) {
-				line[i] = stat.mac();
-				line[i + 1] = String.valueOf(stat.rssi());
-				i += 2;
-			}
-		} else {
-			line = new String[1];
-			line[0] = NO_LOCATION;
-		}
-
-		csvwr.writeNext(line);
-
-		try {
-			csvwr.flush();
-		} catch (IOException ex) {
-			System.out.println("ERROE !! - " + ex.getMessage());
-		} finally {
-			try {
-				csvwr.close();
-				os.close();
-			} catch (IOException ex) {
-				System.out.println(DRUGS_MSG);
-			}
-		}
 	}
 }

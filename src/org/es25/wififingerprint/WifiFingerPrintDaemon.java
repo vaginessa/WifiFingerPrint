@@ -27,9 +27,11 @@ import android.util.Log;
 import java.io.FileNotFoundException;
 import java.util.Set;
 import org.es25.wififingerprint.WifiActivity.ResponseReceiver;
-import org.es25.wififingerprint.struct1.Location;
-import org.es25.wififingerprint.struct1.LocationMap;
-import org.es25.wififingerprint.struct1.Station;
+import org.es25.wififingerprint.struct.Location;
+import org.es25.wififingerprint.struct.LocationMap;
+import org.es25.wififingerprint.struct.Station;
+import org.es25.wififingerprint.util.Algo;
+import org.es25.wififingerprint.util.IO;
 
 
 public class WifiFingerPrintDaemon extends IntentService {
@@ -50,10 +52,15 @@ public class WifiFingerPrintDaemon extends IntentService {
 	}
 
 
+	/**
+	 * Handle that fucking crap!
+	 *
+	 * @param The crappy intent.
+	 */
 	@Override
 	protected void onHandleIntent(Intent arg0) {
 		try {
-			learnedLocations = Util.loadMap(openFileInput(Util.MAP_FILE));
+			learnedLocations = IO.loadMap(openFileInput(IO.MAP_FILE));
 		} catch (FileNotFoundException ex) {
 			System.out.println("ERROR !! - Perform some learning scans first!");
 		}
@@ -66,7 +73,7 @@ public class WifiFingerPrintDaemon extends IntentService {
 		//////////////////////////////////////////////////////////////////////
 		Log.d(TAG, "========START WIFI-SCAN============");
 		wifimgr.startScan();
-		Set<Station> stations = Util.filterScan(wifimgr.getScanResults(), false);
+		Set<Station> stations = Algo.filterScan(wifimgr.getScanResults(), false);
 
 		System.out.println(" ");
 		System.out.println("LEARNED LOCATION MAP\n====================================================================");
@@ -78,11 +85,11 @@ public class WifiFingerPrintDaemon extends IntentService {
 		System.out.println(stations);
 		System.out.println("");
 
-		Location nearest = Util.triangulateLocation(learnedLocations, stations);
+		Location nearest = Algo.triangulate(learnedLocations, stations);
 		String loc_name;
 
 		if (nearest == null)
-			loc_name = Util.NO_LOCATION;
+			loc_name = IO.NO_LOCATION;
 		else
 			loc_name = nearest.getName();
 
@@ -99,9 +106,8 @@ public class WifiFingerPrintDaemon extends IntentService {
 
 		Log.d(TAG, "========Writing logfile============");
 		try {
-			Util.appendToLogfile(
-					nearest,
-					openFileOutput(Util.LOG_FILE, MODE_APPEND));
+			IO.appendToLogfile(nearest,
+					openFileOutput(IO.LOG_FILE, MODE_APPEND));
 		} catch (FileNotFoundException ex) {
 			System.out.println("ERROE !! - " + ex.getMessage());
 		}

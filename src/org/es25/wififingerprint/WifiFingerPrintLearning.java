@@ -26,8 +26,10 @@ import android.net.wifi.WifiManager;
 import android.util.Log;
 import java.io.FileNotFoundException;
 import java.util.Set;
-import org.es25.wififingerprint.struct1.LocationMap;
-import org.es25.wififingerprint.struct1.Station;
+import org.es25.wififingerprint.struct.LocationMap;
+import org.es25.wififingerprint.struct.Station;
+import org.es25.wififingerprint.util.Algo;
+import org.es25.wififingerprint.util.IO;
 
 
 public class WifiFingerPrintLearning extends IntentService {
@@ -52,7 +54,7 @@ public class WifiFingerPrintLearning extends IntentService {
 	protected void onHandleIntent(Intent intent) {
 		String locationName = intent.getStringExtra(PARAM_INPUT);
 		try {
-			locationMap = Util.loadMap(openFileInput(Util.MAP_FILE));
+			locationMap = IO.loadMap(openFileInput(IO.MAP_FILE));
 		} catch (FileNotFoundException ex) {
 			locationMap = new LocationMap();
 		}
@@ -73,7 +75,7 @@ public class WifiFingerPrintLearning extends IntentService {
 		/////////////////////////////////////////////////////////////////////
 		Log.d(TAG, "========START WIFI-SCAN============");
 		wifimgr.startScan();
-		Set<Station> stations = Util.filterScan(wifimgr.getScanResults(), true);
+		Set<Station> stations = Algo.filterScan(wifimgr.getScanResults(), true);
 
 		System.out.println();
 		System.out.println(
@@ -86,9 +88,8 @@ public class WifiFingerPrintLearning extends IntentService {
 
 		Log.d(TAG, "========START Writing============");
 		try {
-			Util.storeMap(
-					locationMap,
-					openFileOutput(Util.MAP_FILE, Context.MODE_PRIVATE));
+			IO.storeMap(locationMap,
+					openFileOutput(IO.MAP_FILE, Context.MODE_PRIVATE));
 		} catch (FileNotFoundException ex) {
 			System.out.println("ERROR on LocMap writing !! - " + ex.getMessage());
 		}
@@ -97,6 +98,5 @@ public class WifiFingerPrintLearning extends IntentService {
 
 	@Override
 	public void onDestroy() {
-		// TODO write the location map bacK to file!!!
 	}
 }

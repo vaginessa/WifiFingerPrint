@@ -17,7 +17,7 @@
  */
 
 
-package org.es25.wififingerprint.struct1;
+package org.es25.wififingerprint.struct;
 
 import java.util.HashMap;
 import java.util.Iterator;
