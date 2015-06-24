@@ -38,17 +38,23 @@ import org.es25.wififingerprint.struct1.Station;
 
 /**
  * Common utility functions for this program.
+ * TODO Alle write- und load-Funktionen an neue Station-struktur anpassen!
+ * TODO Aufsplitten in IO und Algo Utility-Klassen.
  *
  * @author Armin Leghissa
  */
 public class Util {
 	private static final String DRUGS_MSG = "Whitch fucking drugs did they take ???";
+	private static final int MIN_TRIANG_STATIONS = 3;
 
 	/** File name for the csv log file. */
-	public static final String LOG_FILE = "Leghissa_1357869_Rauecker_0757491.log";
+	public static final String LOG_FILE = "LocEstimation.log";
 
-	/** File name for the {@link LocationMap} database. */
+	/** File name for the csv {@link LocationMap} database. */
 	public static final String MAP_FILE = "RssiLearningMap.csv";
+
+	/** Default location name if no location could be triangulated. */
+	public static final String NO_LOCATION = "-NONE-";
 
 
 	/**
@@ -86,9 +92,10 @@ public class Util {
 	 * Performs a median filter on a raw scan and converts the rssi values to quality levels.
 	 *
 	 * @param raw_scan List of {@link ScanResult}s coming from the {@link WifiManager}.
+	 * @param useMedian Whether to apply {@link #medianFilter(TreeSet)}.
 	 * @return A beautiful set of {@link Station}s, ready for locality estimation.
 	 */
-	public static Set<Station> filterScan(List<ScanResult> raw_scan) {
+	public static Set<Station> filterScan(List<ScanResult> raw_scan, boolean useMedian) {
 		TreeSet<Station> scan = new TreeSet<Station>();
 
 		for (ScanResult res : raw_scan) {
@@ -99,7 +106,9 @@ public class Util {
 			scan.add(station);
 		}
 
-		Util.medianFilter(scan);
+		if (useMedian)
+			Util.medianFilter(scan);
+
 		return scan;
 	}
 
@@ -109,19 +118,52 @@ public class Util {
 	 *
 	 * @param loc A {@link Location} object from the {@link LocationMap}, the database.
 	 * @param scan A set of {@link Station}s created from a runtime scan.
-	 * @return the euclidian distance between the intersecting access points.
+	 * @return the euclidian distance if both have at least {@link #MIN_TRIANG_STATIONS} common stations, else infinity.
 	 */
 	public static float eucDist(Location loc, Set<Station> scan) {
-		double res = 0;
+		double res = 0.0;
+		int matches = 0;
 
-		for (Station r : scan) {
+		for (Station s : scan) {
 			Integer loc_rssi;
 
-			if ((loc_rssi = loc.getRssiFor(r.mac)) != null)
-				res += Math.pow((loc_rssi - r.rssi), 2);
+			if ((loc_rssi = loc.getRssiFor(s.mac())) != null) {
+				res += Math.pow((loc_rssi - s.rssi()), 2);
+				matches++;
+			}
 		}
 
-		return (float) Math.sqrt(res);
+		if (matches < MIN_TRIANG_STATIONS)
+			return Float.MAX_VALUE;
+		else
+			return (float) Math.sqrt(res / matches);
+	}
+
+
+	/**
+	 * Caluculates the manhattan distance between a location and a bunch of stations.
+	 *
+	 * @param loc A location object from the DB.
+	 * @param scan A set of stations from a runtime scan.
+	 * @return the manhattan distance if both have at least {@link #MIN_TRIANG_STATIONS} common stations, else infinity.
+	 */
+	public static float manDist(Location loc, Set<Station> scan) {
+		double res = 0.0;
+		int matches = 0;
+
+		for (Station s : scan) {
+			Integer loc_rssi;
+
+			if ((loc_rssi = loc.getRssiFor(s.mac())) != null) {
+				res += Math.abs(loc_rssi - s.rssi());
+				matches++;
+			}
+		}
+
+		if (matches < MIN_TRIANG_STATIONS)
+			return Float.MAX_VALUE;
+		else
+			return (float) (res / matches);
 	}
 
 
@@ -131,22 +173,26 @@ public class Util {
 	 *
 	 * @param learned the location map of learned rssi fingerprints.
 	 * @param scanned a set constructed by a runtime scan.
-	 * @return The triangulated location with the common stations with db locations.
+	 * @return The triangulated result location holding the common stations or null.
 	 */
 	public static Location triangulateLocation(LocationMap learned, Set<Station> scanned) {
-		Float dist = null;
+		float min_dist = Float.MAX_VALUE;
 		Location loc = null;
 
-		for (Location curr : learned) {
-			float curr_dist = eucDist(curr, scanned);
+		for (Location cur : learned) {
+			float cur_dist = eucDist(cur, scanned);
 
-			if (dist == null || dist < curr_dist) {
-				dist = curr_dist;
-				loc = curr;
+			if (cur_dist < min_dist) {
+				min_dist = cur_dist;
+				loc = cur;
 			}
 		}
 
-		TreeSet<Station> rstations = new TreeSet<Station>((TreeSet<Station>) scanned);
+		if (min_dist == Float.MAX_VALUE)
+			return null;
+
+		TreeSet<Station> rstations = new TreeSet<Station>(Station.MAC_COMPARATOR);
+		rstations.addAll((TreeSet<Station>) scanned);
 		rstations.retainAll(loc.getStations());
 		Location resloc = new Location(loc.getName());
 
@@ -200,14 +246,15 @@ public class Util {
 	public static void storeMap(LocationMap map, FileOutputStream os) {
 		CSVWriter csvwr = new CSVWriter(new OutputStreamWriter(os));
 
-		for (String name : map.getNames()) {
-			Location loc = map.getLocation(name);
-			for (Station ap : loc.getStations()) {
-				String[] line = new String[3];
-				line[0] = name;
-				line[1] = ap.mac;
-				line[2] = String.valueOf(ap.rssi);
-				csvwr.writeNext(line);
+		for (Location loc : map) {
+			for (Station stat : loc) {
+				for (int rssi : stat) {
+					String[] line = new String[3];
+					line[0] = loc.getName();
+					line[1] = stat.mac();
+					line[2] = String.valueOf(rssi);
+					csvwr.writeNext(line);
+				}
 			}
 		}
 
@@ -236,18 +283,23 @@ public class Util {
 	 */
 	public static void appendToLogfile(Location loc, FileOutputStream os) {
 		CSVWriter csvwr = new CSVWriter(new OutputStreamWriter(os));
-		int linelen = loc.getStations().size() * 2 + 1;
-		String[] line = new String[linelen];
+		String[] line;
 
-		line[0] = loc.getName();
-		int i = 1;
+		if (loc != null) {
+			line = new String[loc.getStations().size() * 2 + 1];
+			line[0] = loc.getName();
+			int i = 1;
 
-		for (Station stat : loc.getStations()) {
-			line[i] = stat.mac;
-			line[i + 1] = String.valueOf(stat.rssi);
-			i += 2;
+			for (Station stat : loc) {
+				line[i] = stat.mac();
+				line[i + 1] = String.valueOf(stat.rssi());
+				i += 2;
+			}
+		} else {
+			line = new String[1];
+			line[0] = NO_LOCATION;
 		}
-		/// and so forth... depending on result type/signature we don't know yet...
+
 		csvwr.writeNext(line);
 
 		try {

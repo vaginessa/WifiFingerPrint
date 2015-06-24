@@ -19,8 +19,9 @@
 
 package org.es25.wififingerprint.struct1;
 
-import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 
@@ -31,10 +32,9 @@ import java.util.Map;
  *
  * @author Armin Leghissa
  */
-public class Location {
+public class Location implements Iterable<Station> {
 	private final String name;
-	private final ArrayList<Station> stations;
-	private final Map<String, Integer> ap_map;
+	private final Map<String, Station> stations;
 
 
 	/**
@@ -44,8 +44,7 @@ public class Location {
 	 */
 	public Location(String name) {
 		this.name = name;
-		stations = new ArrayList<Station>();
-		ap_map = new HashMap<String, Integer>();
+		stations = new HashMap<String, Station>();
 	}
 
 
@@ -56,8 +55,12 @@ public class Location {
 	 * @param rssi RSSI/quality value.
 	 */
 	public void addStation(String mac, int rssi) {
-		stations.add(new Station(mac, rssi));
-		ap_map.put(mac, rssi);
+		Station station = stations.get(mac);
+
+		if (station == null)
+			stations.put(mac, new Station(mac, rssi));
+		else
+			station.add(rssi);
 	}
 
 
@@ -67,8 +70,12 @@ public class Location {
 	 * @param station A station to add.
 	 */
 	public void addStation(Station station) {
-		stations.add(station);
-		ap_map.put(station.mac, station.rssi);
+		Station stat = stations.get(station.mac());
+
+		if (stat == null)
+			stations.put(station.mac(), station);
+		else
+			stat.add(station.rssi());
 	}
 
 
@@ -87,24 +94,8 @@ public class Location {
 	 *
 	 * @return this station's access points.
 	 */
-	public ArrayList<Station> getStations() {
-		return this.stations;
-	}
-
-
-	/**
-	 * Gets the RSSI value for the specifyed mac address.
-	 *
-	 * @param mac A MAC address which appropriate RSSI value to retrieve.
-	 * @return the appropriate RSSI value or NULL if it does not exist.
-	 */
-	public Integer getRssiValue(String mac) {
-		for (Station d : stations) {
-			if (mac.equals(d.mac)) {
-				return d.rssi;
-			}
-		}
-		return null;
+	public Collection<Station> getStations() {
+		return this.stations.values();
 	}
 
 
@@ -115,7 +106,12 @@ public class Location {
 	 * @return the appropriate RSSI value or NULL if it does not exist.
 	 */
 	public Integer getRssiFor(String mac) {
-		return ap_map.get(mac);
+		Station cur = stations.get(mac);
+
+		if (cur == null)
+			return null;
+		else
+			return cur.rssi();
 	}
 
 
@@ -129,12 +125,23 @@ public class Location {
 		StringBuilder sb = new StringBuilder(this.name);
 		sb.append('\n');
 
-		for (Station station : this.stations) {
+		for (Station station : getStations()) {
 			sb.append('\t');
 			sb.append(sb.append(station.toString()));
 			sb.append('\n');
 		}
 
 		return sb.toString();
+	}
+
+
+	/**
+	 * Returns an iterator over all stations held by this location.
+	 *
+	 * @return a stations iterator.
+	 */
+	@Override
+	public Iterator<Station> iterator() {
+		return stations.values().iterator();
 	}
 }

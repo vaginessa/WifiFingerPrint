@@ -19,19 +19,35 @@
 
 package org.es25.wififingerprint.struct1;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.List;
+
 
 /**
  * A Station, consisting of a mac adress (bssid) and a dB/rssi value.
  * One location can have multiple stations.
  */
-public class Station implements Comparable<Station> {
-	public final String mac;
-	public final int rssi;
+public class Station implements
+		Comparable<Station>,
+		Iterable<Integer> {
+	/** Comparator which compares stations only by their mac adresses instead of rssi values. */
+	public static final Comparator<Station> MAC_COMPARATOR = new Comparator<Station>() {
+		@Override
+		public int compare(Station lhs, Station rhs) {
+			return lhs.mac.compareTo(rhs.mac);
+		}
+	};
+
+	private String mac;
+	private final ArrayList<Integer> rssi_list;
 
 
-	public Station(String bssid, int dbvalue) {
-		this.mac = bssid;
-		this.rssi = dbvalue;
+	public Station(String mac, int rssi) {
+		this.rssi_list = new ArrayList<Integer>();
+		this.rssi_list.add(rssi);
+		this.mac = mac;
 	}
 
 
@@ -42,7 +58,56 @@ public class Station implements Comparable<Station> {
 	 */
 	@Override
 	public String toString() {
-		return String.format("(%s, %d)", this.mac, this.rssi);
+		return String.format("(%s, %d)", mac, rssi());
+	}
+
+
+	/**
+	 * Gets this station's mean rssi value.
+	 *
+	 * @return rssi mean value.
+	 */
+	public int rssi() {
+		if (rssi_list.size() == 1)
+			return rssi_list.get(0);
+		else {
+			int mean_rssi = 0;
+
+			for (int rssi : rssi_list)
+				mean_rssi += rssi;
+
+			return (mean_rssi / rssi_list.size());
+		}
+	}
+
+
+	/**
+	 * Adds the given rssi value.
+	 *
+	 * @param rssi rssi value to add.
+	 */
+	public void add(int rssi) {
+		rssi_list.add(rssi);
+	}
+
+
+	/**
+	 * Gets the rssi values of this station.
+	 *
+	 * @return list of rssi values.
+	 */
+	public List<Integer> values() {
+		return this.rssi_list;
+	}
+
+
+	/**
+	 * Gets this Station's mac address.
+	 *
+	 * @return MAC
+	 */
+	public String mac() {
+		return this.mac;
 	}
 
 
@@ -55,7 +120,7 @@ public class Station implements Comparable<Station> {
 	 */
 	@Override
 	public int compareTo(Station other) {
-		int res = this.rssi - other.rssi;
+		int res = rssi() - other.rssi();
 		if (res == 0)
 			return this.mac.compareTo(other.mac);
 		else
@@ -79,5 +144,16 @@ public class Station implements Comparable<Station> {
 			return this.mac.equals(other.mac);
 		} else
 			return false;
+	}
+
+
+	/**
+	 * Returns an iterator over this station's rssi values.
+	 *
+	 * @return an rssi-iterator.
+	 */
+	@Override
+	public Iterator<Integer> iterator() {
+		return rssi_list.iterator();
 	}
 }

@@ -66,7 +66,7 @@ public class WifiFingerPrintDaemon extends IntentService {
 		//////////////////////////////////////////////////////////////////////
 		Log.d(TAG, "========START WIFI-SCAN============");
 		wifimgr.startScan();
-		Set<Station> stations = Util.filterScan(wifimgr.getScanResults());
+		Set<Station> stations = Util.filterScan(wifimgr.getScanResults(), false);
 
 		System.out.println(" ");
 		System.out.println("LEARNED LOCATION MAP\n====================================================================");
@@ -79,16 +79,22 @@ public class WifiFingerPrintDaemon extends IntentService {
 		System.out.println("");
 
 		Location nearest = Util.triangulateLocation(learnedLocations, stations);
+		String loc_name;
+
+		if (nearest == null)
+			loc_name = Util.NO_LOCATION;
+		else
+			loc_name = nearest.getName();
 
 		System.out.println(" ");
 		System.out.println("TRIANGULATED LOCATION\n====================================================================");
-		System.out.println(nearest);
+		System.out.println(loc_name);
 		System.out.println(" ");
 
 		Intent broadcastIntent = new Intent();
 		broadcastIntent.setAction(ResponseReceiver.ACTION_RESP);
 		broadcastIntent.addCategory(Intent.CATEGORY_DEFAULT);
-		broadcastIntent.putExtra(PARAM_OUTPUT, nearest.getName());
+		broadcastIntent.putExtra(PARAM_OUTPUT, loc_name);
 		sendBroadcast(broadcastIntent);
 
 		Log.d(TAG, "========Writing logfile============");

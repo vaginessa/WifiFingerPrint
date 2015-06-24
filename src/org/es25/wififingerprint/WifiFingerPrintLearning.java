@@ -73,7 +73,7 @@ public class WifiFingerPrintLearning extends IntentService {
 		/////////////////////////////////////////////////////////////////////
 		Log.d(TAG, "========START WIFI-SCAN============");
 		wifimgr.startScan();
-		Set<Station> stations = Util.filterScan(wifimgr.getScanResults());
+		Set<Station> stations = Util.filterScan(wifimgr.getScanResults(), true);
 
 		System.out.println();
 		System.out.println(
