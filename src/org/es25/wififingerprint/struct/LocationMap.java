@@ -44,6 +44,26 @@ public class LocationMap implements Iterable<Location> {
 
 
 	/**
+	 * Gets the size/#locations held by this map.
+	 *
+	 * @return #locations.
+	 */
+	public int size() {
+		return locations.size();
+	}
+
+
+	/**
+	 * Returns whether this map is empty.
+	 *
+	 * @return Empty?
+	 */
+	public boolean empty() {
+		return locations.isEmpty();
+	}
+
+
+	/**
 	 * Add a new {essid, mac, rssi} triple to this map.
 	 *
 	 * @param name The name of a Location.

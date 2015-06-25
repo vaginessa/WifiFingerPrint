@@ -24,6 +24,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.wifi.WifiManager;
 import android.util.Log;
+import java.io.ByteArrayInputStream;
 import java.io.FileNotFoundException;
 import java.util.Set;
 import org.es25.wififingerprint.WifiActivity.ResponseReceiver;
@@ -31,9 +32,16 @@ import org.es25.wififingerprint.struct.Location;
 import org.es25.wififingerprint.struct.LocationMap;
 import org.es25.wififingerprint.struct.Station;
 import org.es25.wififingerprint.util.Algo;
+import org.es25.wififingerprint.util.Corpus;
 import org.es25.wififingerprint.util.IO;
 
 
+/**
+ * The positioning service.
+ * It loads data from csv-file and then performs scans, and tries to triangulate the location.
+ *
+ * @author Armin Leghissa
+ */
 public class WifiFingerPrintDaemon extends IntentService {
 	static private WifiManager wifimgr;
 	public static final String PARAM_INPUT = "imsg";
@@ -41,7 +49,7 @@ public class WifiFingerPrintDaemon extends IntentService {
 	public static final String NOTIFICATION = "org.es25.wififingerprint";
 	public static final String APRESULT = "apresult";
 	private static final String TAG = "WifiFingerPrintDaemon";
-	private LocationMap learnedLocations;
+	private LocationMap locationMap;
 
 
 	/**
@@ -59,10 +67,16 @@ public class WifiFingerPrintDaemon extends IntentService {
 	 */
 	@Override
 	protected void onHandleIntent(Intent arg0) {
+		locationMap = new LocationMap();
+
 		try {
-			learnedLocations = IO.loadMap(openFileInput(IO.MAP_FILE));
+			IO.loadMap(
+					locationMap,
+					openFileInput(IO.MAP_FILE));
 		} catch (FileNotFoundException ex) {
-			System.out.println("ERROR !! - Perform some learning scans first!");
+			IO.loadMap(
+					locationMap,
+					new ByteArrayInputStream(Corpus.data.getBytes()));
 		}
 
 		Log.d(TAG, "========START WIFI-ING============");
@@ -75,17 +89,14 @@ public class WifiFingerPrintDaemon extends IntentService {
 		wifimgr.startScan();
 		Set<Station> stations = Algo.filterScan(wifimgr.getScanResults(), false);
 
-		System.out.println(" ");
 		System.out.println("LEARNED LOCATION MAP\n====================================================================");
-		System.out.println(learnedLocations.getNames());
+		System.out.println(locationMap.getNames());
 		System.out.println();
 
-		System.out.println(" ");
 		System.out.println("CURRENT SCAN RESULTS\n====================================================================");
 		System.out.println(stations);
-		System.out.println("");
 
-		Location nearest = Algo.triangulate(learnedLocations, stations);
+		Location nearest = Algo.triangulate(locationMap, stations);
 		String loc_name;
 
 		if (nearest == null)
@@ -93,10 +104,8 @@ public class WifiFingerPrintDaemon extends IntentService {
 		else
 			loc_name = nearest.getName();
 
-		System.out.println(" ");
 		System.out.println("TRIANGULATED LOCATION\n====================================================================");
 		System.out.println(loc_name);
-		System.out.println(" ");
 
 		Intent broadcastIntent = new Intent();
 		broadcastIntent.setAction(ResponseReceiver.ACTION_RESP);
@@ -104,12 +113,12 @@ public class WifiFingerPrintDaemon extends IntentService {
 		broadcastIntent.putExtra(PARAM_OUTPUT, loc_name);
 		sendBroadcast(broadcastIntent);
 
-		Log.d(TAG, "========Writing logfile============");
-		try {
-			IO.appendToLogfile(nearest,
-					openFileOutput(IO.LOG_FILE, MODE_APPEND));
-		} catch (FileNotFoundException ex) {
-			System.out.println("ERROE !! - " + ex.getMessage());
-		}
+//		Log.d(TAG, "========Writing logfile============");
+//		try {
+//			IO.appendToLogfile(nearest,
+//					openFileOutput(IO.LOG_FILE, MODE_APPEND));
+//		} catch (FileNotFoundException ex) {
+//			System.out.println("ERROE !! - " + ex.getMessage());
+//		}
 	}
 }

@@ -24,14 +24,23 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.wifi.WifiManager;
 import android.util.Log;
+import java.io.ByteArrayInputStream;
 import java.io.FileNotFoundException;
 import java.util.Set;
 import org.es25.wififingerprint.struct.LocationMap;
 import org.es25.wififingerprint.struct.Station;
 import org.es25.wififingerprint.util.Algo;
+import org.es25.wififingerprint.util.Corpus;
 import org.es25.wififingerprint.util.IO;
 
 
+/**
+ * The RSSI learning service.
+ * It loads the location map from csv-file, learns some new locations and
+ * finally bashes all the stuff back to the csv database.
+ *
+ * @author Armin Leghissa
+ */
 public class WifiFingerPrintLearning extends IntentService {
 
 	private static WifiManager wifimgr;
@@ -50,13 +59,24 @@ public class WifiFingerPrintLearning extends IntentService {
 	}
 
 
+	/**
+	 * The main loop of this thread.
+	 *
+	 * @param intent some goddam intent.
+	 */
 	@Override
 	protected void onHandleIntent(Intent intent) {
 		String locationName = intent.getStringExtra(PARAM_INPUT);
+		locationMap = new LocationMap();
+
 		try {
-			locationMap = IO.loadMap(openFileInput(IO.MAP_FILE));
+			IO.loadMap(
+					locationMap,
+					openFileInput(IO.MAP_FILE));
 		} catch (FileNotFoundException ex) {
-			locationMap = new LocationMap();
+			IO.loadMap(
+					locationMap,
+					new ByteArrayInputStream(Corpus.data.getBytes()));
 		}
 
 		System.out.println();
@@ -69,10 +89,6 @@ public class WifiFingerPrintLearning extends IntentService {
 		wifimgr = (WifiManager) getSystemService(Context.WIFI_SERVICE);
 		wifimgr.setWifiEnabled(true);
 
-		////  HERE WE'LL GET A FILTERED AND NORMALISED SCAN.
-		////  NOTE: her we will need a location name from the gui.
-		////        ==> till we have this name, it will be simulated.
-		/////////////////////////////////////////////////////////////////////
 		Log.d(TAG, "========START WIFI-SCAN============");
 		wifimgr.startScan();
 		Set<Station> stations = Algo.filterScan(wifimgr.getScanResults(), true);
@@ -88,15 +104,23 @@ public class WifiFingerPrintLearning extends IntentService {
 
 		Log.d(TAG, "========START Writing============");
 		try {
-			IO.storeMap(locationMap,
+			IO.storeMap(
+					locationMap,
 					openFileOutput(IO.MAP_FILE, Context.MODE_PRIVATE));
 		} catch (FileNotFoundException ex) {
-			System.out.println("ERROR on LocMap writing !! - " + ex.getMessage());
+			System.out.println("ERROR!! - " + ex.getMessage());
 		}
 	}
 
 
+	/**
+	 * Perform final crap and stuff.
+	 */
 	@Override
 	public void onDestroy() {
+		// write the csv file to stdout since it is not possible to:
+		// - get the file with adb pull on non-modded monkey-fucking cellphones,
+		// - anonymously send it per email to my cock-sucking address.
+		IO.storeMap(locationMap, System.out);
 	}
 }

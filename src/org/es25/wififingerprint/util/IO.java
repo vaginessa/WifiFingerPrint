@@ -26,6 +26,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import org.es25.wififingerprint.struct.Location;
 import org.es25.wififingerprint.struct.LocationMap;
@@ -55,11 +56,10 @@ public class IO {
 	 * All readers and streams will be closed by this function.
 	 * NOTE Given instream should be retrieved by {@link Context#openFileInput(String)}!
 	 *
+	 * @param map The {@link LocationMap} to populate with data.
 	 * @param file The csv file to load from.
-	 * @return the {@link LocationMap} represented by the database.
 	 */
-	public static LocationMap loadMap(InputStream in) {
-		LocationMap map = new LocationMap();
+	public static void loadMap(LocationMap map, InputStream in) {
 		CSVReader csvrd = new CSVReader(new InputStreamReader(in));
 		String[] line;
 
@@ -71,18 +71,15 @@ public class IO {
 		} finally {
 			try {
 				csvrd.close();
-				in.close();
 			} catch (IOException ex) {
 				System.out.println(DRUGS_MSG);
 			}
 		}
-
-		return map;
 	}
 
 
 	/**
-	 * Stores a {@link LocationMap} to a csv database specifyed by a {@link FileOutputStream}.
+	 * Stores a {@link LocationMap} to a csv database specifyed by a {@link OutputStream}.
 	 * All writers and streams will be closed by this function.
 	 * NOTE Given outstream should be retrieved by {@link Context#openFileOutput(String, int)}, using mode
 	 * {@link Context#MODE_PRIVATE}!
@@ -90,8 +87,9 @@ public class IO {
 	 * @param map Map to store to database.
 	 * @param os Outpu stream to write to.
 	 */
-	public static void storeMap(LocationMap map, FileOutputStream os) {
+	public static void storeMap(LocationMap map, OutputStream os) {
 		CSVWriter csvwr = new CSVWriter(new OutputStreamWriter(os));
+		Object o = new OutputStreamWriter(System.out);
 
 		for (Location loc : map) {
 			for (Station stat : loc) {
@@ -112,7 +110,6 @@ public class IO {
 		} finally {
 			try {
 				csvwr.close();
-				os.close();
 			} catch (IOException ex) {
 				System.out.println(DRUGS_MSG);
 			}
@@ -156,7 +153,6 @@ public class IO {
 		} finally {
 			try {
 				csvwr.close();
-				os.close();
 			} catch (IOException ex) {
 				System.out.println(DRUGS_MSG);
 			}

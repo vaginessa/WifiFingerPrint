@@ -93,7 +93,6 @@ public class WifiActivity extends Activity {
 		learningBT.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
 				startActivity(LearningIntent);
-
 			}
 		});
 	}
